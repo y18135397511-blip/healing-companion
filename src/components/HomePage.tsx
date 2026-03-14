@@ -7,26 +7,50 @@ import { getTodayCheckIn, getWeekRecords } from '@/lib/storage';
 import EmotionDisplay from './EmotionDisplay';
 import WeekReview from './WeekReview';
 import Link from 'next/link';
+import LoginPage from './LoginPage';
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
   const [dailyCheckIn, setDailyCheckIn] = useState<DailyCheckIn>({ hasCheckedIn: false });
   const [weekRecords, setWeekRecords] = useState<CheckInRecord[]>([]);
   const [showWeekReview, setShowWeekReview] = useState(false);
   const pathname = usePathname();
   
+  // 检查登录状态
+  useEffect(() => {
+    const savedUser = localStorage.getItem('healing_user');
+    if (savedUser) {
+      setIsLoggedIn(true);
+      setUsername(savedUser);
+    }
+  }, []);
+  
   // 每次路由变化时刷新数据
   useEffect(() => {
-    setDailyCheckIn(getTodayCheckIn());
-    setWeekRecords(getWeekRecords());
-  }, [pathname]);
+    if (isLoggedIn) {
+      setDailyCheckIn(getTodayCheckIn());
+      setWeekRecords(getWeekRecords());
+    }
+  }, [pathname, isLoggedIn]);
+  
+  const handleLogin = (name: string) => {
+    setIsLoggedIn(true);
+    setUsername(name);
+  };
+  
+  // 未登录显示登录页
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
   
   return (
     <div className="min-h-screen px-6 py-8" style={{ backgroundColor: '#FDFCF9' }}>
       <div className="max-w-md mx-auto space-y-8">
-        {/* 标题 */}
+        {/* 标题 + 用户名 */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-light text-gray-800">疗愈助手</h1>
-          <p className="text-gray-400 text-sm">今天也要好好照顾自己</p>
+          <p className="text-gray-400 text-sm">{username}，今天也要好好照顾自己</p>
         </div>
         
         {/* 今日状态卡片 */}
@@ -80,6 +104,17 @@ export default function HomePage() {
             <WeekReview records={weekRecords} />
           </div>
         )}
+        
+        {/* 切换用户按钮 */}
+        <button
+          onClick={() => {
+            localStorage.removeItem('healing_user');
+            setIsLoggedIn(false);
+          }}
+          className="w-full py-3 text-gray-400 text-sm hover:text-gray-600 transition-colors"
+        >
+          切换用户
+        </button>
         
         {/* 底部提示 */}
         <p className="text-center text-xs text-gray-300 pt-4">

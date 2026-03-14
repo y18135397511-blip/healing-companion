@@ -1,14 +1,14 @@
 import { CheckInRecord, DailyCheckIn, EmotionType, UserAnswer, MicroAction } from '@/types';
 
-const STORAGE_KEYS = {
-  CHECK_IN_RECORDS: 'healing_companion_records',
-  USER_MEMORIES: 'healing_companion_memories',
-} as const;
+const getStorageKey = (key: string): string => {
+  const username = typeof window !== 'undefined' ? localStorage.getItem('healing_user') || 'default' : 'default';
+  return `healing_${username}_${key}`;
+};
 
 // 获取所有签到记录
 export function getCheckInRecords(): CheckInRecord[] {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(STORAGE_KEYS.CHECK_IN_RECORDS);
+  const data = localStorage.getItem(getStorageKey('records'));
   return data ? JSON.parse(data) : [];
 }
 
@@ -22,7 +22,7 @@ export function saveCheckInRecord(record: CheckInRecord): void {
   } else {
     records.push(record);
   }
-  localStorage.setItem(STORAGE_KEYS.CHECK_IN_RECORDS, JSON.stringify(records));
+  localStorage.setItem(getStorageKey('records'), JSON.stringify(records));
 }
 
 // 获取今日签到状态
@@ -51,7 +51,7 @@ export function getWeekRecords(): CheckInRecord[] {
 // 获取用户记忆（跨会话）
 export function getUserMemories(): string[] {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(STORAGE_KEYS.USER_MEMORIES);
+  const data = localStorage.getItem(getStorageKey('memories'));
   return data ? JSON.parse(data) : [];
 }
 
@@ -60,7 +60,7 @@ export function saveUserMemory(memory: string): void {
   const memories = getUserMemories();
   if (!memories.includes(memory)) {
     memories.push(memory);
-    localStorage.setItem(STORAGE_KEYS.USER_MEMORIES, JSON.stringify(memories));
+    localStorage.setItem(getStorageKey('memories'), JSON.stringify(memories));
   }
 }
 
